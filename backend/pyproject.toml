@@ -1,0 +1,31 @@
+[project]
+name = "agno-hackathon"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "agno>=1.5.6",
+    "asyncpg>=0.30.0",
+    "boto3>=1.38.27",
+    "cuid2>=2.0.1",
+    "dashscope>=1.17.0",  # 阿里云DashScope SDK，用于调用qwen模型
+    "exa-py>=1.13.1",
+    "fast-flights>=2.2",
+    "fastapi>=0.115.12",
+    "firecrawl-py>=2.7.1",
+    "google-genai>=1.18.0",
+    "langchain>=0.1.0",  # LangChain核心框架
+    "langchain-community>=0.0.20",  # LangChain社区工具
+    "langchain-openai>=0.0.5",  # OpenAI兼容接口
+    "langchain-dashscope>=0.0.1",  # 阿里云DashScope集成
+    "langgraph>=0.0.40",  # LangGraph工作流框架
+    "langsmith>=0.0.80",  # LangSmith监控和调试
+    "loguru>=0.7.3",
+    "mem0ai>=0.1.102",
+    "openai>=1.0.0",  # OpenAI兼容接口，用于调用DashScope
+    "pydantic>=2.11.5",
+    "python-dotenv>=1.1.0",
+    "sqlalchemy>=2.0.41",
+    "uvicorn>=0.34.2",
+]
