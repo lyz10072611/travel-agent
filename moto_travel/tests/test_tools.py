@@ -1,11 +1,13 @@
 """
-工具测试
+工具测试（更新为新架构）
 """
 import pytest
 import asyncio
-from tools.map_tools import AmapTool
-from tools.weather_tools import QWeatherTool
-from tools.poi_tools import POITool
+
+# 新架构工具导入
+from app.agents.route_planning.tools.amap_tool import AmapTool
+from app.agents.weather.tools.weather_tool import QWeatherTool
+from app.agents.poi.tools.poi_tool import POITool
 from tools.budget_tools import BudgetCalculator
 
 
@@ -22,7 +24,7 @@ class TestAmapTool:
         async with amap_tool:
             result = await amap_tool.geocode("北京天安门")
             # 由于需要真实API密钥，这里只测试方法调用
-            assert hasattr(result, 'success')
+            assert hasattr(result, 'success') or 'data' in result
     
     @pytest.mark.asyncio
     async def test_get_route(self, amap_tool):
@@ -32,7 +34,7 @@ class TestAmapTool:
                 origin="北京",
                 destination="上海"
             )
-            assert hasattr(result, 'success')
+            assert hasattr(result, 'success') or 'data' in result
 
 
 class TestQWeatherTool:
@@ -47,7 +49,7 @@ class TestQWeatherTool:
         """测试当前天气查询"""
         async with weather_tool:
             result = await weather_tool.get_current_weather("北京")
-            assert hasattr(result, 'success')
+            assert hasattr(result, 'success') or 'data' in result
 
 
 class TestPOITool:
@@ -58,11 +60,14 @@ class TestPOITool:
         return POITool()
     
     @pytest.mark.asyncio
-    async def test_search_restaurants(self, poi_tool):
-        """测试餐厅搜索"""
+    async def test_search_poi(self, poi_tool):
+        """测试POI搜索"""
         async with poi_tool:
-            result = await poi_tool.search_restaurants("北京")
-            assert hasattr(result, 'success')
+            result = await poi_tool.search_poi(
+                keywords="加油站",
+                location="北京"
+            )
+            assert hasattr(result, 'success') or 'data' in result
 
 
 class TestBudgetCalculator:
@@ -81,4 +86,3 @@ class TestBudgetCalculator:
         )
         assert result.success
         assert "total_cost" in result.data
-

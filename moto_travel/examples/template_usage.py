@@ -11,7 +11,9 @@ import json
 # 添加项目根目录到Python路径
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from app.agents.moto_travel_agent import MotoTravelAgent
+# 注意：MotoTravelAgent已迁移到新架构，此示例主要展示模板使用
+# from app.agents.moto_travel_agent import MotoTravelAgent  # 已删除
+from app.agents.route_planning import RoutePlanningAgent  # 使用新架构Agent
 from app.templates.output_templates import MotoTravelPlan, OutputFormatter, OutputFormat
 from app.templates.moto_travel_prompt import MotoTravelPromptTemplate
 
@@ -49,29 +51,29 @@ async def example_markdown_output():
 
 
 async def example_agent_usage():
-    """Agent使用示例"""
-    print("=== Agent使用示例 ===")
+    """Agent使用示例（新架构）"""
+    print("=== Agent使用示例（新架构）===")
     
-    # 创建摩旅Agent
-    agent = MotoTravelAgent()
+    # 使用新架构的路线规划Agent
+    route_agent = RoutePlanningAgent()
     
-    # 执行规划
-    result = await agent.execute(
-        query="从北京到上海的摩旅规划，预算5000元，7天时间",
-        user_id="user_001",
-        output_format="markdown",
+    # 执行路线规划
+    result = await route_agent.execute(
+        origin="北京",
+        destination="上海",
         preferences={
-            "daily_distance": 400,
-            "route_type": "自然风光",
-            "travel_style": "休闲",
-            "budget_range": 5000
-        }
+            "highway_preference": "allow",
+            "fuel_range_km": 300
+        },
+        user_id="user_001"
     )
     
     if result.success:
         print("规划成功!")
         print(f"消息: {result.message}")
-        print(f"数据: {result.data}")
+        route_data = result.data
+        print(f"距离: {route_data.get('final_route', {}).get('distance_km', 0)}km")
+        print(f"建议: {route_data.get('recommendations', [])}")
     else:
         print("规划失败!")
         print(f"错误: {result.message}")
@@ -197,8 +199,8 @@ def create_sample_plan() -> MotoTravelPlan:
         accommodations=[
             {
                 "id": "hotel_001",
-                "name": "摩旅友好酒店",
-                "category": "住宿",
+                "name": "摩旅之家",
+                "category": "民宿",
                 "location": {"name": "天津", "address": "天津市和平区"},
                 "rating": 4.2,
                 "price_level": "经济",

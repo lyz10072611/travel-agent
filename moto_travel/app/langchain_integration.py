@@ -1,6 +1,6 @@
 """
 LangChain/LangGraph集成
-提供Agent编排和工作流管理
+提供Agent编排和工作流管理（适配新架构）
 """
 from typing import Dict, List, Any, Optional, TypedDict
 from datetime import datetime
@@ -10,7 +10,9 @@ from langchain.tools import BaseTool
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolExecutor
 from langgraph.checkpoint.memory import MemorySaver
-from app.agents.router import AgentRouter
+from app.agents.route_planning import RoutePlanningAgent
+from app.agents.weather import WeatherAgent
+from app.agents.poi import POIAgent
 from app.config import settings
 from loguru import logger
 
@@ -26,21 +28,20 @@ class AgentState(TypedDict):
 
 
 class MotoTravelTool(BaseTool):
-    """摩旅工具包装器"""
+    """摩旅工具包装器（适配新架构）"""
     
-    def __init__(self, agent_router: AgentRouter):
+    def __init__(self):
         super().__init__()
-        self.agent_router = agent_router
+        self.route_agent = RoutePlanningAgent()
+        self.weather_agent = WeatherAgent()
+        self.poi_agent = POIAgent()
         self.name = "moto_travel_agent"
         self.description = """
         摩旅智能助手工具，可以处理以下类型的请求：
-        1. 路线规划 - 规划摩托车旅行路线
+        1. 路线规划 - 规划摩托车旅行路线（集成高德+百度地图）
         2. 天气查询 - 查询天气信息和预警
-        3. POI服务 - 查找餐饮、住宿、修车等服务
-        4. 政策查询 - 查询摩托车相关政策
-        5. 景点推荐 - 推荐旅游景点
-        6. 预算计算 - 计算旅行预算
-        7. 个性化定制 - 个性化设置和推荐
+        3. POI服务 - 查找餐饮、住宿、修车、加油站等服务
+        4. 禁摩政策检查 - 检查城市和路线的禁摩政策
         """
     
     def _run(self, query: str, user_id: str = "") -> str:
@@ -51,7 +52,21 @@ class MotoTravelTool(BaseTool):
     async def _arun(self, query: str, user_id: str = "") -> str:
         """异步执行工具"""
         try:
-            result = await self.agent_router.execute(query=query, user_id=user_id)
+            query_lower = query.lower()
+            
+            # 根据查询内容路由到对应Agent
+            if any(keyword in query_lower for keyword in ["路线", "路径", "导航", "从", "到"]):
+                # 路线规划
+                result = await self.route_agent.execute(query=query, user_id=user_id)
+            elif any(keyword in query_lower for keyword in ["天气", "温度", "下雨", "预报"]):
+                # 天气查询
+                result = await self.weather_agent.execute(query=query, user_id=user_id)
+            elif any(keyword in query_lower for keyword in ["餐厅", "酒店", "加油站", "修车", "禁摩", "政策"]):
+                # POI查询或政策检查
+                result = await self.poi_agent.execute(query=query, user_id=user_id)
+            else:
+                # 默认使用路线规划
+                result = await self.route_agent.execute(query=query, user_id=user_id)
             
             if result.success:
                 return f"执行成功: {result.message}\n结果: {result.data}"
@@ -63,7 +78,7 @@ class MotoTravelTool(BaseTool):
 
 
 class LangChainIntegration:
-    """LangChain集成类"""
+    """LangChain集成类（适配新架构）"""
     
     def __init__(self):
         self.llm = ChatOpenAI(
@@ -73,8 +88,7 @@ class LangChainIntegration:
             temperature=0.1
         )
         
-        self.agent_router = AgentRouter()
-        self.moto_travel_tool = MotoTravelTool(self.agent_router)
+        self.moto_travel_tool = MotoTravelTool()
         self.tool_executor = ToolExecutor([self.moto_travel_tool])
         
         # 创建状态图
@@ -115,13 +129,9 @@ class LangChainIntegration:
             你是一个摩旅智能助手的意图分类器。请分析用户请求，确定需要调用哪个Agent。
             
             可用的Agent类型：
-            1. route - 路线规划
-            2. weather - 天气查询  
-            3. poi - POI服务
-            4. search - 网页搜索
-            5. attraction - 景点推荐
-            6. budget - 预算计算
-            7. personalization - 个性化定制
+            1. route_planning - 路线规划：处理路线规划、导航、路径计算等
+            2. weather - 天气查询：处理天气查询、预报、预警等
+            3. poi - POI服务：处理餐饮、住宿、修车、加油站等本地服务，以及禁摩政策检查
             
             请返回最合适的Agent类型名称。
             """
@@ -144,7 +154,7 @@ class LangChainIntegration:
             
         except Exception as e:
             logger.error(f"Intent classification failed: {str(e)}")
-            state["current_agent"] = "route"  # 默认使用路线规划
+            state["current_agent"] = "route_planning"  # 默认使用路线规划
             return state
     
     async def _execute_agent(self, state: AgentState) -> AgentState:
@@ -156,11 +166,6 @@ class LangChainIntegration:
             current_agent = state["current_agent"]
             
             # 使用工具执行器调用Agent
-            tool_input = {
-                "query": query,
-                "user_id": user_id
-            }
-            
             result = await self.tool_executor.ainvoke(
                 {"query": query, "user_id": user_id}
             )

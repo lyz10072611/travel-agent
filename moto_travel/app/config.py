@@ -35,6 +35,13 @@ class Settings(BaseSettings):
         env="AMAP_WEB_SERVICE_URL"
     )
     
+    # 百度地图配置
+    baidu_api_key: Optional[str] = Field(default=None, env="BAIDU_API_KEY")
+    baidu_web_service_url: str = Field(
+        default="https://api.map.baidu.com",
+        env="BAIDU_WEB_SERVICE_URL"
+    )
+    
     # 天气服务配置
     qweather_api_key: str = Field(..., env="QWEATHER_API_KEY")
     qweather_base_url: str = Field(
@@ -44,7 +51,31 @@ class Settings(BaseSettings):
     
     # 第三方服务配置
     meituan_api_key: Optional[str] = Field(default=None, env="MEITUAN_API_KEY")
+    meituan_app_secret: Optional[str] = Field(default=None, env="MEITUAN_APP_SECRET")
+    meituan_base_url: str = Field(
+        default="https://openapi.meituan.com",
+        env="MEITUAN_BASE_URL"
+    )
     ctrip_api_key: Optional[str] = Field(default=None, env="CTRIP_API_KEY")
+    ctrip_base_url: str = Field(
+        default="https://openapi.ctrip.com",
+        env="CTRIP_BASE_URL"
+    )
+    tongcheng_api_key: Optional[str] = Field(default=None, env="TONGCHENG_API_KEY")
+    tongcheng_base_url: str = Field(
+        default="https://openapi.ly.com",
+        env="TONGCHENG_BASE_URL"
+    )
+    qunar_api_key: Optional[str] = Field(default=None, env="QUNAR_API_KEY")
+    qunar_base_url: str = Field(
+        default="https://openapi.qunar.com",
+        env="QUNAR_BASE_URL"
+    )
+    fliggy_api_key: Optional[str] = Field(default=None, env="FLIGGY_API_KEY")
+    fliggy_base_url: str = Field(
+        default="https://openapi.fliggy.com",
+        env="FLIGGY_BASE_URL"
+    )
     dianping_api_key: Optional[str] = Field(default=None, env="DIANPING_API_KEY")
     
     # 安全配置

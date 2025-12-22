@@ -11,35 +11,45 @@ import json
 # 添加项目根目录到Python路径
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from app.agents.enhanced_moto_travel_agent import EnhancedMotoTravelAgent
-from app.agents.enhanced_router import EnhancedAgentRouter
+# 注意：EnhancedMotoTravelAgent和EnhancedAgentRouter已迁移到新架构
+# 此示例已过时，请参考 examples/basic_usage.py 和 examples/route_preferences_usage.py
+# from app.agents.enhanced_moto_travel_agent import EnhancedMotoTravelAgent  # 已删除
+# from app.agents.enhanced_router import EnhancedAgentRouter  # 已删除
+
+# 使用新架构Agent
+from app.agents.route_planning import RoutePlanningAgent
+from app.agents.weather import WeatherAgent
+from app.agents.poi import POIAgent
+from app.agents.base.message import MessagePriority
 
 
 async def example_intelligent_route_planning():
-    """智能路线规划示例"""
-    print("=== 智能路线规划示例 ===")
+    """智能路线规划示例（新架构）"""
+    print("=== 智能路线规划示例（新架构）===")
+    print("⚠️ 注意：此示例已更新为新架构，请参考 examples/basic_usage.py")
     
-    agent = EnhancedMotoTravelAgent()
+    route_agent = RoutePlanningAgent()
     
-    # 示例1: 基础路线规划
-    result = await agent.execute(
-        query="从北京到上海的摩旅规划，我想途经泰山看看，预算5000元，7天时间",
-        user_id="user_001",
-        output_format="markdown",
+    # 示例1: 基础路线规划（新架构）
+    result = await route_agent.execute(
+        origin="北京",
+        destination="上海",
+        waypoints=["泰山"],
         preferences={
-            "daily_distance": 400,
-            "route_type": "自然风光",
-            "travel_style": "休闲"
-        }
+            "highway_preference": "allow",
+            "fuel_range_km": 300
+        },
+        user_id="user_001"
     )
     
-    print(f"查询: 从北京到上海的摩旅规划，我想途经泰山看看，预算5000元，7天时间")
+    print(f"查询: 从北京到上海的摩旅规划，途经泰山")
     print(f"结果: {result.message}")
     if result.success:
-        print("✓ 智能路线规划成功")
-        print(f"使用的智能功能: {result.metadata.get('intelligence_features', [])}")
+        print("✓ 路线规划成功（新架构）")
+        route_data = result.data
+        print(f"距离: {route_data.get('final_route', {}).get('distance_km', 0)}km")
     else:
-        print("✗ 智能路线规划失败")
+        print("✗ 路线规划失败")
     print()
 
 
@@ -67,25 +77,26 @@ async def example_fuel_budget_calculation():
 
 
 async def example_weather_safety_analysis():
-    """天气安全分析示例"""
-    print("=== 天气安全分析示例 ===")
+    """天气安全分析示例（新架构）"""
+    print("=== 天气安全分析示例（新架构）===")
     
-    router = EnhancedAgentRouter()
+    weather_agent = WeatherAgent()
     
-    # 示例3: 天气安全分析
-    result = await router.execute(
-        query="我准备明天从北京出发去上海，路上会下雨吗？风力大不大？需要带什么装备？",
+    # 示例3: 天气安全分析（新架构）
+    result = await weather_agent.execute(
+        location="北京",
+        days=7,
         user_id="user_001"
     )
     
-    print(f"查询: 我准备明天从北京出发去上海，路上会下雨吗？风力大不大？需要带什么装备？")
+    print(f"查询: 北京的天气情况")
     print(f"结果: {result.message}")
     if result.success:
-        print("✓ 天气安全分析成功")
-        print(f"路由到的Agent: {result.metadata.get('routed_agent')}")
-        print(f"意图识别置信度: {result.metadata.get('confidence_score', 0)}")
+        print("✓ 天气查询成功（新架构）")
+        weather_data = result.data
+        print(f"当前温度: {weather_data.get('current', {}).get('temperature', 'N/A')}°C")
     else:
-        print("✗ 天气安全分析失败")
+        print("✗ 天气查询失败")
     print()
 
 
